@@ -22,14 +22,17 @@ export default function SignLanguageRecognition() {
   const [recognizedSign, setRecognizedSign] = useState<string | null>(null);
   const [recognizedText, setRecognizedText] = useState<string>("");
   const [detectionHistory, setDetectionHistory] = useState<string[]>([]);
+  const [detectionActive, setDetectionActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const detectionIntervalRef = useRef<number | null>(null);
   const { toast } = useToast();
   
-  // Clean up stream on component unmount
+  // Clean up stream and interval on component unmount
   useEffect(() => {
     return () => {
+      stopDetection();
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -48,12 +51,9 @@ export default function SignLanguageRecognition() {
         streamRef.current = stream;
         setIsCapturing(true);
         
-        // Start sign detection (simulated)
-        startSignDetection();
-        
         toast({
           title: "Camera started",
-          description: "Sign language detection is now active"
+          description: "Sign language detection is ready"
         });
       }
     } catch (err) {
@@ -68,6 +68,8 @@ export default function SignLanguageRecognition() {
 
   // Stop webcam capture
   const stopCapture = () => {
+    stopDetection();
+    
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -96,57 +98,96 @@ export default function SignLanguageRecognition() {
     });
   };
 
-  // Start sign language detection (simulated)
-  const startSignDetection = () => {
-    // In a real app, this would use a trained machine learning model
-    // Here we're simulating detection with random signs from our database
+  // Start sign detection
+  const startDetection = () => {
+    if (!isCapturing) {
+      toast({
+        title: "Camera not active",
+        description: "Please start the camera first",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const detectionInterval = setInterval(() => {
-      if (!isCapturing) {
-        clearInterval(detectionInterval);
-        return;
-      }
-      
-      // Simulate processing video frame
-      if (videoRef.current && canvasRef.current && isCapturing) {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
+    setDetectionActive(true);
+    toast({
+      title: "Detection started",
+      description: "Now detecting sign language gestures"
+    });
+    
+    // Clear any existing interval
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+    }
+    
+    // Start new detection interval
+    detectionIntervalRef.current = window.setInterval(() => {
+      processVideoFrame();
+    }, 2000); // Check every 2 seconds
+  };
+  
+  // Stop sign detection
+  const stopDetection = () => {
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+      detectionIntervalRef.current = null;
+    }
+    setDetectionActive(false);
+    
+    if (isCapturing) {
+      toast({
+        title: "Detection paused",
+        description: "Sign language detection has been paused"
+      });
+    }
+  };
+
+  // Process video frame for sign detection
+  const processVideoFrame = () => {
+    if (!videoRef.current || !canvasRef.current || !isCapturing) return;
+    
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      try {
+        // Take snapshot from video to canvas
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         
-        if (context) {
-          // Take snapshot from video to canvas
-          context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        // Simulate detection (random sign for demo)
+        // In real app, this would be where ML inference happens
+        const randomDetection = Math.random() > 0.3; // 70% chance to "detect" a sign
+        
+        if (randomDetection) {
+          // Get a random sign from our database
+          const signs = Object.keys(signGestureDatabase);
+          const randomSign = signs[Math.floor(Math.random() * signs.length)];
+          const meaning = signGestureDatabase[randomSign];
           
-          // Simulate detection (random sign for demo)
-          const randomDetection = Math.random() > 0.8; // 20% chance to "detect" a sign
+          setRecognizedSign(randomSign);
+          setRecognizedText(meaning);
           
-          if (randomDetection) {
-            // Get a random sign from our database
-            const signs = Object.keys(signGestureDatabase);
-            const randomSign = signs[Math.floor(Math.random() * signs.length)];
-            const meaning = signGestureDatabase[randomSign];
-            
-            setRecognizedSign(randomSign);
-            setRecognizedText(meaning);
-            
-            // Add to history
-            setDetectionHistory(prev => [
-              `${randomSign} - ${meaning}`, 
-              ...prev.slice(0, 7)
-            ]);
-            
-            // Show toast for new detection
-            toast({
-              title: "Sign Detected",
-              description: `Detected: ${randomSign} (${meaning})`,
-              duration: 1500,
-            });
-          }
+          // Add to history (avoid duplicates in sequence)
+          const newDetection = `${randomSign} - ${meaning}`;
+          setDetectionHistory(prev => {
+            // Don't add if it's the same as the most recent detection
+            if (prev.length > 0 && prev[0] === newDetection) {
+              return prev;
+            }
+            return [newDetection, ...prev.slice(0, 7)];
+          });
+          
+          // Show toast for new detection
+          toast({
+            title: "Sign Detected",
+            description: `Detected: ${randomSign} (${meaning})`,
+            duration: 1500,
+          });
         }
+      } catch (err) {
+        console.error("Error processing video frame:", err);
       }
-    }, 3000); // Check every 3 seconds
-    
-    // Clean up interval
-    return () => clearInterval(detectionInterval);
+    }
   };
 
   return (
@@ -185,6 +226,12 @@ export default function SignLanguageRecognition() {
                   {recognizedSign}
                 </div>
               )}
+              
+              {isCapturing && (
+                <div className="absolute bottom-2 right-2">
+                  <div className={`w-3 h-3 rounded-full ${detectionActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                </div>
+              )}
             </div>
             
             <div className="flex gap-2 mt-2">
@@ -212,6 +259,27 @@ export default function SignLanguageRecognition() {
                 <RefreshCw className="h-4 w-4 mr-1" /> Reset
               </Button>
             </div>
+            
+            {isCapturing && (
+              <div className="flex w-full mt-3">
+                {!detectionActive ? (
+                  <Button 
+                    onClick={startDetection} 
+                    className="bg-able-orange hover:bg-able-gold text-able-darkBrown font-semibold w-full"
+                  >
+                    Start Detection
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={stopDetection}
+                    variant="outline"
+                    className="font-semibold w-full"
+                  >
+                    Pause Detection
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           
           {/* Recognition Results */}
