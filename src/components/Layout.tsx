@@ -39,6 +39,7 @@ export default function Layout({ children }: LayoutProps) {
             <Link to="/subjects" className="hover:text-able-gold transition-colors">Subjects</Link>
             <Link to="/chat" className="hover:text-able-gold transition-colors">AI Tutor</Link>
             <Link to="/tools" className="hover:text-able-gold transition-colors">Accessibility Tools</Link>
+            <Link to="/sign-language" className="hover:text-able-gold transition-colors">Sign Language</Link>
           </div>
           <Button
             variant="ghost"

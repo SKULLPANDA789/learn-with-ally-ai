@@ -1,11 +1,10 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, StopCircle, Volume2, FilePlus, Copy, ArrowRight } from "lucide-react";
+import { Mic, StopCircle, Volume2, FilePlus, Copy, ArrowRight, Accessibility } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import SignLanguageConverter from "./SignLanguageConverter";
+import { Link } from "react-router-dom";
 
 export default function AccessibilityTools() {
   const [isListening, setIsListening] = useState(false);
@@ -291,14 +290,22 @@ export default function AccessibilityTools() {
             </CardContent>
           </Card>
           
-          {/* Sign Language Converter */}
+          {/* Sign Language Tool Card */}
           <Card className="md:col-span-2 bg-able-brown/10 dark:bg-able-darkBrown/30 border-able-tan/20">
             <CardHeader>
               <CardTitle className="font-gloria text-able-brown dark:text-able-tan">Text to Sign Language</CardTitle>
               <CardDescription>Convert text to sign language representation</CardDescription>
             </CardHeader>
             <CardContent>
-              <SignLanguageConverter />
+              <div className="text-center">
+                <p className="mb-4">Our sign language tool helps convert text to sign language symbols.</p>
+                <Link to="/sign-language">
+                  <Button className="bg-able-orange hover:bg-able-gold text-able-darkBrown font-semibold flex items-center gap-2">
+                    <Accessibility size={18} />
+                    Open Sign Language Tool
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
