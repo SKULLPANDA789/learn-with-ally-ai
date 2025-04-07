@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mic, StopCircle, Volume2, FilePlus, Copy, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import SignLanguageConverter from "./SignLanguageConverter";
 
 export default function AccessibilityTools() {
   const [isListening, setIsListening] = useState(false);
@@ -287,6 +288,17 @@ export default function AccessibilityTools() {
                   Summarize
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+          
+          {/* Sign Language Converter */}
+          <Card className="md:col-span-2 bg-able-brown/10 dark:bg-able-darkBrown/30 border-able-tan/20">
+            <CardHeader>
+              <CardTitle className="font-gloria text-able-brown dark:text-able-tan">Text to Sign Language</CardTitle>
+              <CardDescription>Convert text to sign language representation</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SignLanguageConverter />
             </CardContent>
           </Card>
         </div>

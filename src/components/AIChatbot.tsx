@@ -24,6 +24,9 @@ const defaultMessages: Message[] = [
   },
 ];
 
+// Mock API endpoint - in a real application, this would be your actual API URL
+const AI_API_ENDPOINT = "https://api.example.com/chat"; // Replace with actual API endpoint
+
 export default function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>(defaultMessages);
   const [inputMessage, setInputMessage] = useState("");
@@ -31,7 +34,7 @@ export default function AIChatbot() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const { toast } = useToast();
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!inputMessage.trim()) return;
     
     // Add user message
@@ -45,25 +48,78 @@ export default function AIChatbot() {
     setInputMessage("");
     setIsLoading(true);
     
-    // In a real app, this would be an API call to an AI service
-    setTimeout(() => {
-      const responses = [
-        "That's an excellent question! In mathematics, equations are used to represent relationships between variables.",
-        "I understand this topic can be challenging. Let me break it down into simpler steps for you.",
-        "Great observation! When studying literature, it's important to analyze the author's intent and the historical context.",
-        "I'd recommend practicing with these example problems to strengthen your understanding of this concept.",
-        "Science is all about curiosity and discovery. Let's explore this topic together!",
-      ];
+    try {
+      // In a real implementation, this would be an actual API call
+      // For now, we'll simulate a successful API call with a delayed response
+      const apiResponse = await callChatAPI(inputMessage);
       
       const aiResponse: Message = {
         role: "assistant",
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: apiResponse,
         timestamp: new Date(),
       };
       
       setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Error calling AI API:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get a response from the AI. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  // Mock API call function - replace with actual implementation when API is ready
+  const callChatAPI = async (message: string): Promise<string> => {
+    // This is a placeholder for the actual API call
+    // In a real implementation, you would use fetch or axios to call your API
+    
+    // Simulating network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // For demo purposes, we'll return predefined responses based on keywords in the message
+    const lowerCaseMessage = message.toLowerCase();
+    
+    if (lowerCaseMessage.includes("math") || lowerCaseMessage.includes("equation")) {
+      return "In mathematics, equations represent relationships between variables. What specific concept are you struggling with?";
+    } else if (lowerCaseMessage.includes("science") || lowerCaseMessage.includes("biology")) {
+      return "Science is all about discovery and understanding our world. I'd be happy to explain any scientific concepts you're curious about!";
+    } else if (lowerCaseMessage.includes("literature") || lowerCaseMessage.includes("book")) {
+      return "Literature analysis involves understanding the author's intent, historical context, and various literary devices. What are you reading?";
+    } else if (lowerCaseMessage.includes("help") || lowerCaseMessage.includes("stuck")) {
+      return "I understand this topic can be challenging. Let me break it down into simpler steps for you. What specific part is confusing?";
+    } else {
+      return "That's an interesting question! Would you like me to explain this topic in more detail or provide some practice examples?";
+    }
+    
+    /* 
+    // Real API implementation would look something like this:
+    try {
+      const response = await fetch(AI_API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          message: message,
+          context: "education" 
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+      
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error("API Error:", error);
+      throw error;
+    }
+    */
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

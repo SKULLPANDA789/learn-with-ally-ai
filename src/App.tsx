@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import ChatPage from "./pages/ChatPage";
 import ToolsPage from "./pages/ToolsPage";
 import SubjectsPage from "./pages/SubjectsPage";
+import SignLanguagePage from "./pages/SignLanguagePage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/tools" element={<ToolsPage />} />
             <Route path="/subjects" element={<SubjectsPage />} />
+            <Route path="/sign-language" element={<SignLanguagePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
