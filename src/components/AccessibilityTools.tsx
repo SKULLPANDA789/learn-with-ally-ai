@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, StopCircle, Volume2, Volume, FilePlus, Copy, ArrowRight } from "lucide-react";
+import { Mic, StopCircle, Volume2, FilePlus, Copy, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function AccessibilityTools() {
@@ -14,8 +14,8 @@ export default function AccessibilityTools() {
   const [summarizedText, setSummarizedText] = useState("");
   const { toast } = useToast();
   
-  // Speech recognition
-  let recognition: SpeechRecognition | null = null;
+  // Use a ref to store the recognition instance
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   
   const startSpeechToText = () => {
     if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -28,8 +28,20 @@ export default function AccessibilityTools() {
     }
     
     // Setup Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) {
+      toast({
+        title: "Speech Recognition Not Available",
+        description: "Speech recognition is not available in your browser",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    recognitionRef.current = new SpeechRecognitionAPI();
+    const recognition = recognitionRef.current;
+    
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
@@ -42,7 +54,7 @@ export default function AccessibilityTools() {
       });
     };
     
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
         .map(result => result[0])
         .map(result => result.transcript)
@@ -52,7 +64,7 @@ export default function AccessibilityTools() {
       setInputText(transcript);
     };
     
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error("Speech recognition error", event.error);
       setIsListening(false);
       toast({
@@ -70,8 +82,8 @@ export default function AccessibilityTools() {
   };
 
   const stopSpeechToText = () => {
-    if (recognition) {
-      recognition.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsListening(false);
       toast({
         title: "Stopped Listening",
